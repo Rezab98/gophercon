@@ -1,10 +1,10 @@
 package commands
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/Rezab98/gophercon/internal/automation"
 	"github.com/Rezab98/gophercon/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -22,14 +22,28 @@ Examples:
 	Run: func(cmd *cobra.Command, args []string) {
 		text := strings.Join(args, " ")
 
-		// TODO: Replace the stub below with the real type implementation.
-		fmt.Println(ui.StubStyle.Render(fmt.Sprintf("[stub] Typing text: %s", text)))
+		// Validate and perform the typing action using the automation helpers.
+		var err error
+		if delayMS > 0 {
+			err = automation.TypeStringDelay(text, delayMS)
+		} else {
+			err = automation.TypeString(text)
+		}
+		checkError(err)
 
-		// Proper error handling placeholder
-		checkError(errors.New("type command not implemented yet"))
+		// Print success information.
+		charCount := len([]rune(text))
+		fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Successfully typed %d characters.", charCount)))
 	},
 }
 
+var (
+	// delayMS holds the user-provided delay flag for the `type` command.
+	delayMS int
+)
+
 func init() {
+	// Register the flag before adding command to root
+	typeTextCmd.Flags().IntVarP(&delayMS, "delay", "d", 0, "Delay between keystrokes in milliseconds")
 	rootCmd.AddCommand(typeTextCmd)
 }

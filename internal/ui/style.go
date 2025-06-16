@@ -10,4 +10,7 @@ var (
 
 	// ErrorStyle colors error-like messages.
 	ErrorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("1")).Bold(true)
+
+	// SuccessStyle colors success messages.
+	SuccessStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("2")).Bold(true)
 )

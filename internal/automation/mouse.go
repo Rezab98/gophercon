@@ -3,6 +3,7 @@ package automation
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/go-vgo/robotgo"
 )
@@ -100,4 +101,59 @@ func Click(x, y int) error {
 // GetMousePosition to satisfy the naming convention required by the commands package.
 func GetPosition() (int, int) {
 	return GetMousePosition()
+}
+
+// Move moves the mouse cursor instantly (no built-in smoothing).
+// This is useful for CLI commands that need immediate positioning without any visible animation.
+func Move(x, y int) error {
+	// Validate coordinates – negatives are not supported.
+	if x < 0 || y < 0 {
+		return fmt.Errorf("coordinates must be non-negative; received (%d,%d)", x, y)
+	}
+
+	// robotgo.MoveMouse performs an immediate jump without easing.
+	robotgo.MoveMouse(x, y)
+	return nil
+}
+
+// MoveSmooth moves the mouse cursor to the specified coordinates over the requested duration (in
+// milliseconds). A very small duration effectively behaves like Move.  Internally this performs a
+// linear interpolation between the current location and the target, sleeping between small steps
+// so that the overall motion takes approximately the desired amount of time.
+func MoveSmooth(x, y int, durationMs int) error {
+	// Basic validation to keep the behaviour consistent with Move.
+	if x < 0 || y < 0 {
+		return fmt.Errorf("coordinates must be non-negative; received (%d,%d)", x, y)
+	}
+	if durationMs <= 0 {
+		// A non-positive duration defaults to an instant move.
+		return Move(x, y)
+	}
+
+	// Capture starting position so we can interpolate.
+	startX, startY := robotgo.Location()
+	dx := x - startX
+	dy := y - startY
+
+	// Number of steps.  We cap at 240 steps (~60fps over 4s) to avoid too many robotgo calls.
+	steps := 120 // default granularity
+	if durationMs > 4000 {
+		steps = 240
+	} else if durationMs < 500 {
+		steps = 60
+	}
+
+	sleepPerStep := time.Duration(durationMs) * time.Millisecond / time.Duration(steps)
+
+	for i := 1; i <= steps; i++ {
+		// Linear interpolation.
+		nx := startX + dx*i/steps
+		ny := startY + dy*i/steps
+		robotgo.MoveMouse(nx, ny)
+		time.Sleep(sleepPerStep)
+	}
+
+	// Ensure we end exactly on target.
+	robotgo.MoveMouse(x, y)
+	return nil
 }

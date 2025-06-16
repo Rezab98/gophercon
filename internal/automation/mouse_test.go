@@ -34,3 +34,20 @@ func TestParseCoordinates(t *testing.T) {
 		t.Errorf("expected error for non-numeric Y coordinate, got nil")
 	}
 }
+
+// TestMoveNegativeCoordinates ensures that Move and MoveSmooth reject negative coordinates.
+func TestMoveNegativeCoordinates(t *testing.T) {
+	if err := Move(-1, 0); err == nil {
+		t.Errorf("expected error for negative X coordinate in Move, got nil")
+	}
+	if err := Move(0, -1); err == nil {
+		t.Errorf("expected error for negative Y coordinate in Move, got nil")
+	}
+
+	if err := MoveSmooth(-1, 0, 1000); err == nil {
+		t.Errorf("expected error for negative X coordinate in MoveSmooth, got nil")
+	}
+	if err := MoveSmooth(0, -1, 1000); err == nil {
+		t.Errorf("expected error for negative Y coordinate in MoveSmooth, got nil")
+	}
+}
