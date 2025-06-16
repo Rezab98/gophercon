@@ -1,0 +1,62 @@
+version: '3'
+
+vars:
+  BINARY_NAME: desktop-automation
+  BUILD_DIR: bin
+  MAIN_PATH: ./cmd/desktop-automation
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  build:
+    desc: Build the application
+    cmds:
+      - mkdir -p {{.BUILD_DIR}}
+      - go build -o {{.BUILD_DIR}}/{{.BINARY_NAME}} {{.MAIN_PATH}}
+    sources:
+      - "**/*.go"
+      - go.mod
+      - go.sum
+    generates:
+      - "{{.BUILD_DIR}}/{{.BINARY_NAME}}"
+
+  run:
+    desc: Run the application
+    deps: [build]
+    cmds:
+      - ./{{.BUILD_DIR}}/{{.BINARY_NAME}} {{.CLI_ARGS}}
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - rm -rf {{.BUILD_DIR}}
+      - go clean
+
+  test:
+    desc: Run tests
+    cmds:
+      - go test -v ./...
+
+  lint:
+    desc: Run linter
+    cmds:
+      - golangci-lint run
+
+  dev:
+    desc: Run in development mode with hot reload
+    cmds:
+      - go run {{.MAIN_PATH}} {{.CLI_ARGS}}
+
+  deps:
+    desc: Download dependencies
+    cmds:
+      - go mod download
+      - go mod tidy
+
+  install:
+    desc: Install the binary to GOPATH/bin
+    cmds:
+      - go install {{.MAIN_PATH}} 
