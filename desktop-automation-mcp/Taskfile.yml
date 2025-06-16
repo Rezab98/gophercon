@@ -1,0 +1,44 @@
+version: '3'
+
+vars:
+  BINARY_NAME: mcp-server
+  BUILD_DIR: bin
+  MAIN_PATH: ./cmd/mcp-server
+
+# Inherit GOFLAGS and GOPATH from parent environment.
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  build:
+    desc: Build the MCP server binary
+    cmds:
+      - mkdir -p {{.BUILD_DIR}}
+      - go build -o {{.BUILD_DIR}}/{{.BINARY_NAME}} {{.MAIN_PATH}}
+    sources:
+      - '**/*.go'
+      - go.mod
+      - go.sum
+    generates:
+      - '{{.BUILD_DIR}}/{{.BINARY_NAME}}'
+
+  run:
+    desc: Build and run the server via stdio (useful for Claude Desktop)
+    deps: [build]
+    cmds:
+      - ./{{.BUILD_DIR}}/{{.BINARY_NAME}} {{.CLI_ARGS}}
+
+  clean:
+    desc: Remove build artifacts
+    cmds:
+      - rm -rf {{.BUILD_DIR}}
+      - go clean
+
+  deps:
+    desc: Download & tidy module dependencies
+    cmds:
+      - go mod download
+      - go mod tidy 
